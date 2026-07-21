@@ -6,3 +6,8 @@ variables:
   default-value: 0.0
 mythicmobs:
   register-mechanics: true
+migration:
+  enabled: true
+  input-directory: imports
+  output-directory: exports
+  native-library: native/YSMParserJNI.dll

@@ -10,3 +10,12 @@ depend:
   - ModelEngine
 softdepend:
   - MythicMobs
+commands:
+  ysmmolang:
+    description: Manage asynchronous YSM model migration
+    usage: /ysmmolang <migrate|status|paths>
+    permission: ysmmolang.admin
+permissions:
+  ysmmolang.admin:
+    description: Run and inspect YSM model migrations
+    default: op

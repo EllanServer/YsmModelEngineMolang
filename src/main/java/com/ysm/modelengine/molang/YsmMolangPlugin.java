@@ -4,9 +4,11 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.keyframe.data.IKeyframeData;
 import com.ticxo.modelengine.api.animation.keyframe.data.KeyframeReaderRegistry;
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.nio.file.Path;
 import java.util.function.Function;
 
 public final class YsmMolangPlugin extends JavaPlugin {
@@ -16,6 +18,7 @@ public final class YsmMolangPlugin extends JavaPlugin {
     private MolangEvaluationContext evaluationContext;
     private MolangKeyframeReader reader;
     private KeyframeReaderRegistry keyframeReaders;
+    private YsmMigrationService migrationService;
 
     @Override
     public void onEnable() {
@@ -49,10 +52,14 @@ public final class YsmMolangPlugin extends JavaPlugin {
                 && Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
             registerMythicIntegration();
         }
+        if (getConfig().getBoolean("migration.enabled", true)) {
+            registerMigration();
+        }
     }
 
     @Override
     public void onDisable() {
+        if (migrationService != null) migrationService.close();
         if (evaluationContext != null) evaluationContext.clear();
         if (compiler != null) compiler.clear();
         if (variables != null) variables.clearAll();
@@ -74,5 +81,47 @@ public final class YsmMolangPlugin extends JavaPlugin {
         } catch (LinkageError | RuntimeException exception) {
             getLogger().warning("MythicMobs integration was not registered: " + exception.getMessage());
         }
+    }
+
+    private void registerMigration() {
+        try {
+            Path dataRoot = getDataFolder().toPath().toAbsolutePath().normalize();
+            Path inputDirectory = resolveDataPath(dataRoot,
+                    getConfig().getString("migration.input-directory", "imports"));
+            Path outputDirectory = resolveDataPath(dataRoot,
+                    getConfig().getString("migration.output-directory", "exports"));
+            Path nativeLibrary = resolveDataPath(dataRoot,
+                    getConfig().getString("migration.native-library", "native/YSMParserJNI.dll"));
+
+            migrationService = new YsmMigrationService(
+                    this, inputDirectory, outputDirectory, nativeLibrary);
+            YsmMolangCommand executor = new YsmMolangCommand(this, migrationService);
+            PluginCommand command = getCommand("ysmmolang");
+            if (command == null) {
+                migrationService.close();
+                migrationService = null;
+                getLogger().warning("Migration command is missing from plugin.yml.");
+                return;
+            }
+            command.setExecutor(executor);
+            command.setTabCompleter(executor);
+            migrationService.prepareAsync().whenComplete((ignored, error) -> {
+                if (error != null) {
+                    Throwable cause = error.getCause() == null ? error : error.getCause();
+                    getLogger().warning("Unable to prepare migration directories: " + cause.getMessage());
+                }
+            });
+            getLogger().info("Registered asynchronous YSM migration command /ysmmolang.");
+        } catch (RuntimeException exception) {
+            if (migrationService != null) migrationService.close();
+            migrationService = null;
+            getLogger().warning("YSM migration was not registered: " + exception.getMessage());
+        }
+    }
+
+    private static Path resolveDataPath(Path dataRoot, String configuredPath) {
+        Path configured = Path.of(configuredPath == null ? "" : configuredPath.trim());
+        return (configured.isAbsolute() ? configured : dataRoot.resolve(configured))
+                .toAbsolutePath().normalize();
     }
 }

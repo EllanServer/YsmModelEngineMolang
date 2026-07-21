@@ -8,19 +8,19 @@ import com.ticxo.modelengine.api.model.bone.ModelBone;
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangExpression;
 import gg.moonflower.molangcompiler.api.MolangRuntime;
-import gg.moonflower.molangcompiler.api.bridge.MolangJavaFunction;
 import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
-import gg.moonflower.molangcompiler.api.object.MolangLibrary;
+import gg.moonflower.molangcompiler.api.object.MolangObject;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 
 final class MolangEvaluationContext {
     private final EntityVariableStore variables;
@@ -240,32 +240,55 @@ final class MolangEvaluationContext {
         return EntityVariableStore.normalizeName(name);
     }
 
-    private final class YsmLibrary extends MolangLibrary {
-        private final Frame frame;
+    private final class YsmLibrary implements MolangObject {
+        private final Map<String, MolangExpression> values;
 
         private YsmLibrary(Frame frame) {
-            this.frame = frame;
-        }
-
-        @Override
-        protected void populate(BiConsumer<String, MolangExpression> consumer) {
-            consumer.accept("has_mainhand", MolangExpression.of(frame.hasMainHand ? 1.0F : 0.0F));
-            consumer.accept("has_offhand", MolangExpression.of(frame.hasOffHand ? 1.0F : 0.0F));
-            consumer.accept("food_level", MolangExpression.of(frame.foodLevel));
-            consumer.accept("second_order", function(5, context -> secondOrder(
+            Map<String, MolangExpression> entries = new LinkedHashMap<>();
+            entries.put("has_mainhand", MolangExpression.of(frame.hasMainHand ? 1.0F : 0.0F));
+            entries.put("has_offhand", MolangExpression.of(frame.hasOffHand ? 1.0F : 0.0F));
+            entries.put("food_level", MolangExpression.of(frame.foodLevel));
+            entries.put("second_order", MolangExpression.function(5, context -> secondOrder(
                     frame, Math.round(context.get(0)), context.get(1), context.get(2), context.get(3), context.get(4))));
-            consumer.accept("bone_rot_x", function(1, context -> boneRotation(frame, Math.round(context.get(0)), 0)));
-            consumer.accept("bone_rot_y", function(1, context -> boneRotation(frame, Math.round(context.get(0)), 1)));
-            consumer.accept("bone_rot_z", function(1, context -> boneRotation(frame, Math.round(context.get(0)), 2)));
+            entries.put("bone_rot_x", MolangExpression.function(1,
+                    context -> boneRotation(frame, Math.round(context.get(0)), 0)));
+            entries.put("bone_rot_y", MolangExpression.function(1,
+                    context -> boneRotation(frame, Math.round(context.get(0)), 1)));
+            entries.put("bone_rot_z", MolangExpression.function(1,
+                    context -> boneRotation(frame, Math.round(context.get(0)), 2)));
+            values = Map.copyOf(entries);
         }
 
         @Override
-        protected String getName() {
-            return "ysm";
+        public MolangExpression get(String name) throws MolangRuntimeException {
+            MolangExpression expression = values.get(name);
+            if (expression == null) throw new MolangRuntimeException("Unknown YSM Molang value: " + name);
+            return expression;
         }
 
-        private MolangExpression function(int parameters, MolangJavaFunction function) {
-            return MolangExpression.function(parameters, function);
+        @Override
+        public void set(String name, MolangExpression value) throws MolangRuntimeException {
+            throw new MolangRuntimeException("YSM Molang values are immutable");
+        }
+
+        @Override
+        public void remove(String name) throws MolangRuntimeException {
+            throw new MolangRuntimeException("YSM Molang values are immutable");
+        }
+
+        @Override
+        public boolean has(String name) {
+            return values.containsKey(name);
+        }
+
+        @Override
+        public Collection<String> getKeys() {
+            return values.keySet();
+        }
+
+        @Override
+        public boolean isMutable() {
+            return false;
         }
     }
 

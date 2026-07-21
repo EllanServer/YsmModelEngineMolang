@@ -5,5 +5,16 @@ Molang compiler
 - License: MIT
 - Project: Ocelot5836/molang-compiler
 
+Gson
+- Artifact: com.google.code.gson:gson:2.10.1
+- License: Apache License 2.0
+- Project: google/gson
+
+YSMParser JNI
+- Component: native/YSMParserJNI.dll
+- License: MIT
+- Project: OpenYSM/YSMParser
+- The bundled binary is used only by the asynchronous migration worker.
+
 ModelEngine and Paper APIs are compile-time/runtime dependencies supplied by
 those projects and are not bundled into the plugin JAR.
