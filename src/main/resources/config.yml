@@ -1,0 +1,8 @@
+diagnostics:
+  unknown-query-warning-interval-seconds: 10
+  expression-error-warning-interval-seconds: 10
+  max-cached-expressions: 4096
+variables:
+  default-value: 0.0
+mythicmobs:
+  register-mechanics: true

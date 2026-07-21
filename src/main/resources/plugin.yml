@@ -1,0 +1,12 @@
+name: YsmModelEngineMolang
+version: '${version}'
+main: com.ysm.modelengine.molang.YsmMolangPlugin
+api-version: '1.19'
+load: POSTWORLD
+author: OpenYSM
+description: Runtime Molang keyframe support for ModelEngine
+folia-supported: true
+depend:
+  - ModelEngine
+softdepend:
+  - MythicMobs

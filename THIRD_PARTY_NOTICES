@@ -1,0 +1,9 @@
+Third-party components
+
+Molang compiler
+- Artifact: gg.moonflower:molang-compiler:3.1.1.19
+- License: MIT
+- Project: Ocelot5836/molang-compiler
+
+ModelEngine and Paper APIs are compile-time/runtime dependencies supplied by
+those projects and are not bundled into the plugin JAR.
