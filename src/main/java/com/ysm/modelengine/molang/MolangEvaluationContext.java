@@ -49,7 +49,7 @@ final class MolangEvaluationContext {
         float health = base == null ? 0.0F : base.getHealth();
         float maxHealth = base == null ? 0.0F : base.getMaxHealth();
         boolean alive = base == null || base.isAlive();
-        boolean onGround = base != null && base.isOnGround();
+        boolean onGround = entity != null && entity.isOnGround();
         boolean moving = base != null && base.isWalking();
         boolean flying = base != null && base.isFlying();
         boolean sneaking = entity instanceof LivingEntity living && living.isSneaking();
