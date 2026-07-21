@@ -61,6 +61,31 @@ class MolangCompilerFacadeTest {
     }
 
     @Test
+    void rewritesLegacyYsmSyntaxWithoutChangingResults() throws Exception {
+        var falseEnvironment = MolangRuntime.runtime()
+                .setVariable("bag", MolangExpression.of(0.0F))
+                .setVariable("qh", MolangExpression.of(0.0F))
+                .setQuery("ground_speed", MolangExpression.of(0.0F))
+                .setQuery("head_x_rotation", MolangExpression.of(18.0F))
+                .create();
+        var trueEnvironment = MolangRuntime.runtime()
+                .setVariable("bag", MolangExpression.of(1.0F))
+                .setVariable("qh", MolangExpression.of(1.0F))
+                .setQuery("ground_speed", MolangExpression.of(1.0F))
+                .setQuery("head_x_rotation", MolangExpression.of(18.0F))
+                .create();
+
+        assertEquals(1.0F, compiler.compile("!v.bag").get(falseEnvironment), 0.0001F);
+        assertEquals(0.0F, compiler.compile("!v.bag").get(trueEnvironment), 0.0001F);
+        assertEquals(0.0F, compiler.compile("v.qh?180").get(falseEnvironment), 0.0001F);
+        assertEquals(180.0F, compiler.compile("v.qh?180").get(trueEnvironment), 0.0001F);
+        assertEquals(-2.0F, compiler.compile("-(query.head_x_rotation/9)").get(trueEnvironment), 0.0001F);
+        assertEquals(0.0F, compiler.compile("v.bv=q.ground_speed>0?5").get(falseEnvironment), 0.0001F);
+        assertEquals(5.0F, compiler.compile("v.bv=q.ground_speed>0?5").get(trueEnvironment), 0.0001F);
+        assertDoesNotThrow(() -> compiler.compile("7.-math.sin(160+q.anim_time*240)*0.5"));
+    }
+
+    @Test
     void rejectsInvalidExpression() {
         assertThrows(IllegalArgumentException.class, () -> compiler.compile("query."));
     }
