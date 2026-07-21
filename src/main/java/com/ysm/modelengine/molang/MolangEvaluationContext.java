@@ -7,6 +7,7 @@ import com.ticxo.modelengine.api.model.ModeledEntity;
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangExpression;
 import gg.moonflower.molangcompiler.api.MolangRuntime;
+import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
@@ -86,7 +87,11 @@ final class MolangEvaluationContext {
         }
 
         MolangEnvironment environment = builder.create();
-        return expression.get(environment);
+        try {
+            return expression.get(environment);
+        } catch (MolangRuntimeException exception) {
+            throw new IllegalStateException("Molang runtime evaluation failed", exception);
+        }
     }
 
     void warn(String key, String message) {
