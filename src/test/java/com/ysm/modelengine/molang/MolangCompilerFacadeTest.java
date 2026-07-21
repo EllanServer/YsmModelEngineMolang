@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.logging.Logger;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +38,26 @@ class MolangCompilerFacadeTest {
         assertSame(first, second);
         assertEquals(180.0F, first.get(environment), 0.0001F);
         assertEquals(1, compiler.size());
+    }
+
+    @Test
+    void evaluatesCaseInsensitiveYsmVariables() throws Exception {
+        MolangExpression expression = compiler.compile("v.L12_P0");
+        var environment = MolangRuntime.runtime()
+                .setVariable("l12_p0", MolangExpression.of(7.0F))
+                .create();
+
+        assertEquals(7.0F, expression.get(environment), 0.0001F);
+    }
+
+    @Test
+    void rewritesYsmStringArgumentExtensionsBeforeCompilation() {
+        assertDoesNotThrow(() -> compiler.compile(
+                "ysm.second_order('头发垂直', math.clamp(-3*q.vertical_speed+v.hv,-10,120), 2, 0.6, 0)"
+        ));
+        assertDoesNotThrow(() -> compiler.compile(
+                "(v.legOrnamentsAngle - ysm.bone_rot('LeftLeg').x) * 0.5"
+        ));
     }
 
     @Test

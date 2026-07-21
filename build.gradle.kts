@@ -24,6 +24,10 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.12.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    testRuntimeOnly("com.ticxo.modelengine:ModelEngine:R4.1.0") {
+        isTransitive = false
+    }
     testCompileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     testCompileOnly("com.ticxo.modelengine:ModelEngine:R4.1.0") {
         isTransitive = false

@@ -27,7 +27,7 @@ public final class YsmMolangPlugin extends JavaPlugin {
         variables = new EntityVariableStore((float) getConfig().getDouble("variables.default-value", 0.0D));
         compiler = new MolangCompilerFacade(
                 getConfig().getInt("diagnostics.max-cached-expressions", 4096), diagnostics);
-        evaluationContext = new MolangEvaluationContext(variables, diagnostics);
+        evaluationContext = new MolangEvaluationContext(variables, diagnostics, compiler.symbols());
         reader = new MolangKeyframeReader(compiler, evaluationContext);
 
         Plugin modelEngine = Bukkit.getPluginManager().getPlugin("ModelEngine");
@@ -53,6 +53,7 @@ public final class YsmMolangPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (evaluationContext != null) evaluationContext.clear();
         if (compiler != null) compiler.clear();
         if (variables != null) variables.clearAll();
         if (diagnostics != null) diagnostics.clear();
